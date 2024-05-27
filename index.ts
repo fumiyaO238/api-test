@@ -2,7 +2,6 @@ import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import { uid } from "uid";
 import mysql from "mysql2";
-import { error } from "console";
 
 //接続するDBの情報
 const connection = mysql.createConnection({
