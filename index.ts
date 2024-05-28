@@ -8,25 +8,25 @@ const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "Password123!",
-  database: "api_todos",
+  database: "api_blogs",
 });
 
 const app: Application = express();
-const PORT = 3000;
+const PORT = 3333;
 
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: "http://localhost:3000" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 //getリクエスト
 app.get('/', (req: Request, res: Response) => {
   console.log("getリクエストを受け付けました。");
-  const sql = "SELECT * FROM todo";
+  const sql = "SELECT * FROM  blog";
   connection.query(sql, (error, result) => {
     if(error) {
       res.status(500).json({ message: error.message });
     } else {
-      res.status(200).json({ todos: result });
+      res.status(200).json({ blogs: result });
     }
   })
 });
