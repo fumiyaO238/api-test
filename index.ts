@@ -53,7 +53,7 @@ app.delete("/delete", (req: Request, res: Response) => {
   console.log("deleteリクエストを受け付けました。");
   console.log(req.body.id);
   const id = req.body.id;
-  const sql = `DELETE FROM todo WHERE id="${id}"`;
+  const sql = `DELETE FROM blog WHERE id="${id}"`;
   connection.query(sql, (error) => {
     if(error) {
       return res.status(500).json({ message: error.message });
