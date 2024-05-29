@@ -34,16 +34,17 @@ app.get('/', (req: Request, res: Response) => {
 //postリクエスト
 app.post("/add", (req: Request, res: Response) => {
   console.log("postリクエストを受け付けました。");
-  console.log(req.body)
-  const { todo } = req.body.data;
-  const uidValue = uid();
-  const sql = `INSERT INTO todo VALUES ("${uidValue}", "${todo}")`;
+  // console.log(req.body.data)
+  const { blog } = req.body.data;
+  const id = "id1"
+  const sql = `INSERT INTO blog (content, user_id) VALUES ("${ blog }", "${id}")`;
+
   connection.query(sql, (error, result) => {
     if(error) {
       console.log(error);
-      return res.status(500).json({ message: "Failed to add todo"});
+      return res.status(500).json({ message: "Failed to add blog"});
     }
-    return res.status(200).json({ id: uidValue, todo});
+    res.status(200).json({ blogs: result });
   })
 });
 
