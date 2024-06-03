@@ -98,6 +98,26 @@ app.post("/signup", (req: Request, res: Response) => {
     res.status(200).json({ id: id });
   })
 });
+/* login */
+app.post("/login", (req: Request, res: Response) => {
+  console.log("loginリクエストを受け付けました。");
+  const email = req.body.email;
+  const password = req.body.password;
+  
+  const sql = `SELECT * FROM users WHERE email="${email}" AND password="${password}"`;
+
+  connection.query(sql, (error, results) => {
+    if(error) {
+      console.log(error);
+      return res.status(500).json({ message: "Failed to registrate user"});
+    }
+    console.log(results)
+    // const list = result.map(user => user.name)
+    // console.log(list)
+
+    res.status(200).json({ result: results });
+  })
+});
 
 try {
   app.listen(PORT, () => {
