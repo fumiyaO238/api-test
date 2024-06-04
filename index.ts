@@ -105,7 +105,7 @@ app.post("/signup", (req: Request, res: Response) => {
   connection.query(sql, (error, result) => {
     if(error) {
       console.log(error);
-      return res.status(500).json({ message: "Failed to registrate user"});
+      return res.status(500).json({ message: "※登録失敗\nユーザーの登録に失敗しました。\n入力されたメールアドレスは既に使用されています。\n別のメールアドレスをご使用ください。"});
     }
     console.log(result)
     res.status(200).json({ id: id });
@@ -125,9 +125,6 @@ app.post("/login", (req: Request, res: Response) => {
       return res.status(500).json({ message: "Failed to registrate user"});
     }
     console.log(results)
-    // const list = result.map(user => user.name)
-    // console.log(list)
-
     res.status(200).json({ result: results });
   })
 });
