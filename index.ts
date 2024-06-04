@@ -78,7 +78,20 @@ app.put("/update", (req: Request, res: Response) => {
   })
 })
 
-/* signup */
+/* users */
+// getリクエスト
+app.get('/userlist', (req: Request, res: Response) => {
+  console.log("userListリクエストを受け付けました。");
+  const sql = "SELECT * FROM  users";
+  connection.query(sql, (error, result) => {
+    if(error) {
+      res.status(500).json({ message: error.message });
+    } else {
+      res.status(200).json({ blogs: result });
+    }
+  })
+});
+// signup
 app.post("/signup", (req: Request, res: Response) => {
   console.log("signupリクエストを受け付けました。");
   const insertTime = GetDateTime();
@@ -98,7 +111,7 @@ app.post("/signup", (req: Request, res: Response) => {
     res.status(200).json({ id: id });
   })
 });
-/* login */
+// login
 app.post("/login", (req: Request, res: Response) => {
   console.log("loginリクエストを受け付けました。");
   const email = req.body.email;
@@ -118,6 +131,7 @@ app.post("/login", (req: Request, res: Response) => {
     res.status(200).json({ result: results });
   })
 });
+// logout
 
 try {
   app.listen(PORT, () => {
