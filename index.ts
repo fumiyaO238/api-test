@@ -125,6 +125,7 @@ app.post("/login", (req: Request, res: Response) => {
       return res.status(500).json({ message: "Failed to registrate user"});
     }
     console.log(results)
+    // reaponse with json web token
     res.status(200).json({ result: results });
   })
 });
