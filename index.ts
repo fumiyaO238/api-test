@@ -12,6 +12,8 @@ const connection = mysql.createConnection({
   database: "api_blogs",
 });
 
+const jwt = require("jsonwebtoken");
+
 const app: Application = express();
 const PORT = 3333;
 
@@ -25,7 +27,7 @@ app.get('/', (req: Request, res: Response) => {
   console.log("getリクエストを受け付けました。");
   const sql = "SELECT * FROM  blog";
   connection.query(sql, (error, result) => {
-    if(error) {
+    if (error) {
       res.status(500).json({ message: error.message });
     } else {
       res.status(200).json({ blogs: result });
@@ -39,12 +41,12 @@ app.post("/add", (req: Request, res: Response) => {
   const insertTime = GetDateTime();
   const { blog } = req.body.data;
   const id = "id1"
-  const sql = `INSERT INTO blog (content, user_id, created_at) VALUES ("${ blog }", "${id}", "${insertTime}")`;
+  const sql = `INSERT INTO blog (content, user_id, created_at) VALUES ("${blog}", "${id}", "${insertTime}")`;
 
   connection.query(sql, (error, result) => {
-    if(error) {
+    if (error) {
       console.log(error);
-      return res.status(500).json({ message: "Failed to add blog"});
+      return res.status(500).json({ message: "Failed to add blog" });
     }
     res.status(200).json({ blogs: result });
   })
@@ -56,7 +58,7 @@ app.delete("/delete", (req: Request, res: Response) => {
   const id = req.body.id;
   const sql = `DELETE FROM blog WHERE id="${id}"`;
   connection.query(sql, (error) => {
-    if(error) {
+    if (error) {
       return res.status(500).json({ message: error.message });
     } else {
       return res.status(200).json({ message: "success" });
@@ -70,7 +72,7 @@ app.put("/update", (req: Request, res: Response) => {
   const { id, todo } = req.body.data;
   const sql = `UPDATE todo SET todo="${todo} WHERE id="${id}"`;
   connection.query(sql, (error) => {
-    if(error) {
+    if (error) {
       res.status(500).json({ message: error.message });
     } else {
       res.status(200).json({ id, todo });
@@ -84,7 +86,7 @@ app.get('/userlist', (req: Request, res: Response) => {
   console.log("userListリクエストを受け付けました。");
   const sql = "SELECT * FROM  users";
   connection.query(sql, (error, result) => {
-    if(error) {
+    if (error) {
       res.status(500).json({ message: error.message });
     } else {
       res.status(200).json({ blogs: result });
@@ -103,9 +105,9 @@ app.post("/signup", (req: Request, res: Response) => {
   const sql = `INSERT INTO users (id, name, email, password, created_at) VALUES ("${id}", "${name}", "${email}", "${password}", "${insertTime}")`;
 
   connection.query(sql, (error, result) => {
-    if(error) {
+    if (error) {
       console.log(error);
-      return res.status(500).json({ message: "※登録失敗\nユーザーの登録に失敗しました。\n入力されたメールアドレスは既に使用されています。\n別のメールアドレスをご使用ください。"});
+      return res.status(500).json({ message: "※登録失敗\nユーザーの登録に失敗しました。\n入力されたメールアドレスは既に使用されています。\n別のメールアドレスをご使用ください。" });
     }
     console.log(result)
     res.status(200).json({ id: id });
@@ -115,18 +117,26 @@ app.post("/signup", (req: Request, res: Response) => {
 app.post("/login", (req: Request, res: Response) => {
   console.log("loginリクエストを受け付けました。");
   const email = req.body.email;
-  const password = req.body.password;
-  
+  const password = req.body.pwd;
+
   const sql = `SELECT * FROM users WHERE email="${email}" AND password="${password}"`;
 
   connection.query(sql, (error, results) => {
-    if(error) {
+    if (error) {
       console.log(error);
-      return res.status(500).json({ message: "Failed to registrate user"});
+      return res.status(500).json({ message: "Failed to registrate user" });
     }
-    console.log(results)
-    // reaponse with json web token
-    res.status(200).json({ result: results });
+
+    // @ts-ignore
+    if (results.length === 0) {
+      return res.status(500).json({ message: "※ログイン失敗\nログインに失敗しました。\n入力された情報が間違っています。\n再度ご入力いただくか、サインアップから始めてください。" });
+    } else {
+      console.log(results)
+      // generate the json web token
+      const token = jwt.sign({ email: email }, "SECRETKEY");
+      // res.json({ token: token });
+      res.status(200).json({ result: results, token: token });
+    }
   })
 });
 // logout
