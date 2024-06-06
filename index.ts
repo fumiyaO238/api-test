@@ -3,7 +3,6 @@ import cors from "cors";
 import { uid } from "uid";
 import mysql from "mysql2";
 import GetDateTime from "./util/GetDateTime"
-import { get } from "http";
 
 //接続するDBの情報
 const connection = mysql.createConnection({
@@ -25,10 +24,10 @@ app.use(express.urlencoded({ extended: true }));
 /* blog */
 // getリクエスト
 app.get('/', (req: Request, res: Response) => {
-  const Header = (req.headers.authorization?.split(" "))
+  const authoHeader = (req.headers.authorization?.split(" "))
   // @ts-ignore
-  const authoHeader = Header[1];
-  console.log(authoHeader)
+  const successToken = authoHeader[1];
+  console.log(successToken)
 
   console.log("getリクエストを受け付けました。");
   const sql = "SELECT * FROM  blog";
@@ -83,6 +82,47 @@ app.put("/update", (req: Request, res: Response) => {
     } else {
       res.status(200).json({ id, todo });
     }
+  })
+})
+
+/* myblog */
+// getリクエスト
+app.get('/my-blogs', (req: Request, res: Response) => {
+  console.log("my-blogsのgetリクエストを受け付けました。");
+  const authoHeader = (req.headers.authorization?.split(" "))
+  // @ts-ignore
+  const successToken = authoHeader[1];
+  console.log(successToken)
+
+  // ここにトークンからユーザIDを取得する処理
+  const sqlToken = `SELECT user_id FROM code WHERE token="${successToken}"`;
+
+  connection.query(sqlToken, (error, results) => {
+    if (error) {
+      console.log(error);
+      return res.status(500).json({ message: "Failed to registrate user" });
+    }
+
+    // @ts-ignore
+    if (results.length === 0) {
+      return res.status(500).json({ message: "※ログイン失敗\nログインに失敗しました。\n再度お試しください。" });
+    }
+    // @ts-ignore
+    const user_id = results[0].user_id;
+    console.log(user_id)
+
+    // blog取得 -------------------
+    const sqlToken = `SELECT * FROM blog WHERE user_id ="${user_id}"`;
+
+    connection.query(sqlToken, (error, result) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Failed to registrate user" });
+      }
+      console.log(`${user_id}さんのブログ取得`)
+      // console.log(result)
+      res.status(200).json({ result: result });
+    })
   })
 })
 
@@ -175,7 +215,7 @@ app.post("/token", (req: Request, res: Response) => {
     // @ts-ignore
     const user_id = results[0].user_id;
     console.log(user_id)
-  
+
     // user取得 -------------------
     const sqlToken = `SELECT * FROM users WHERE id ="${user_id}"`;
 
@@ -185,12 +225,10 @@ app.post("/token", (req: Request, res: Response) => {
         return res.status(500).json({ message: "Failed to registrate user" });
       }
       console.log(results)
-      res.status(200).json({ result: results, passedToken:successToken });
+      res.status(200).json({ result: results, passedToken: successToken });
     })
   })
 });
-
-
 
 try {
   app.listen(PORT, () => {
