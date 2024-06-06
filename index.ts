@@ -130,16 +130,59 @@ app.post("/login", (req: Request, res: Response) => {
     // @ts-ignore
     if (results.length === 0) {
       return res.status(500).json({ message: "※ログイン失敗\nログインに失敗しました。\n入力された情報が間違っています。\n再度ご入力いただくか、サインアップから始めてください。" });
-    } else {
-      console.log(results)
-      // generate the json web token
-      const token = jwt.sign({ email: email }, "SECRETKEY");
-      // res.json({ token: token });
-      res.status(200).json({ result: results, token: token });
     }
+    // @ts-ignore
+    const user_id = results[0].id;
+
+    // token生成
+    const token = jwt.sign({ email: email }, "SECRETKEY");
+    const sqlToken = `INSERT INTO code (token, user_id) VALUES ("${token}", "${user_id}")`;
+
+    connection.query(sqlToken, (error, results) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Failed to registrate user" });
+      }
+      res.status(200).json({ token: token });
+    })
   })
 });
 // logout
+
+// tokenCheck
+app.post("/token", (req: Request, res: Response) => {
+  console.log("tokenリクエストを受け付けました。");
+  const successToken = req.body.successToken;
+
+  const sqlToken = `SELECT user_id FROM code WHERE token="${successToken}"`;
+
+  connection.query(sqlToken, (error, results) => {
+    if (error) {
+      console.log(error);
+      return res.status(500).json({ message: "Failed to registrate user" });
+    }
+
+    // @ts-ignore
+    if (results.length === 0) {
+      return res.status(500).json({ message: "※ログイン失敗\nログインに失敗しました。\n再度お試しください。" });
+    }
+    // @ts-ignore
+    const user_id = results[0].user_id;
+    console.log(user_id)
+  
+    // user取得 -------------------
+    const sqlToken = `SELECT * FROM users WHERE id ="${user_id}"`;
+
+    connection.query(sqlToken, (error, results) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Failed to registrate user" });
+      }
+      console.log(results)
+      res.status(200).json({ result: results, passedToken:successToken });
+    })
+  })
+});
 
 try {
   app.listen(PORT, () => {
