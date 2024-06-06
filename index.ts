@@ -3,6 +3,7 @@ import cors from "cors";
 import { uid } from "uid";
 import mysql from "mysql2";
 import GetDateTime from "./util/GetDateTime"
+import { get } from "http";
 
 //接続するDBの情報
 const connection = mysql.createConnection({
@@ -21,9 +22,14 @@ app.use(cors({ origin: "http://localhost:3000" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* home */
+/* blog */
 // getリクエスト
 app.get('/', (req: Request, res: Response) => {
+  const Header = (req.headers.authorization?.split(" "))
+  // @ts-ignore
+  const authoHeader = Header[1];
+  console.log(authoHeader)
+
   console.log("getリクエストを受け付けました。");
   const sql = "SELECT * FROM  blog";
   connection.query(sql, (error, result) => {
@@ -183,6 +189,8 @@ app.post("/token", (req: Request, res: Response) => {
     })
   })
 });
+
+
 
 try {
   app.listen(PORT, () => {
