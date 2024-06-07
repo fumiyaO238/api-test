@@ -152,17 +152,45 @@ app.get('/userlist', (req: Request, res: Response) => {
     }
     // @ts-ignore
     const user_id = results[0].user_id;
-
-    const sql = "SELECT * FROM  users";
-    connection.query(sql, (error, result) => {
+    // user取得
+    const sqlGetUser = "SELECT * FROM users";
+    connection.query(sqlGetUser, (error, usersResult) => {
       if (error) {
         res.status(500).json({ message: error.message });
-      } else {
-        res.status(200).json({ users: result, user_id: user_id });
       }
+
+      // relationships取得
+      const sqlGetRelationships = `SELECT * FROM relationships WHERE follower_id = "${user_id}"`
+      connection.query(sqlGetRelationships, (error, relResult) => {
+        if (error) {
+          res.status(500).json({ message: error.message });
+        } else {
+          console.log(relResult)
+          res.status(200).json({ usersResult: usersResult, user_id: user_id, relResult: relResult });
+        }
+      })
     })
   });
 })
+// postリクエスト(follow)
+app.post("/user-follow", (req: Request, res: Response) => {
+  console.log("followリクエストを受け付けました。");
+  // console.log(req.body.data)
+  const insertTime = GetDateTime();
+  const myUserId = req.body.myUserId;
+  const followedId = req.body.followedId;
+  
+  const sql = `INSERT INTO relationships (follower_id, following_id, created_at) VALUES ("${myUserId}", "${followedId}", "${insertTime}")`;
+
+  connection.query(sql, (error, result) => {
+    if (error) {
+      console.log(error);
+      return res.status(500).json({ message: "Failed to add blog" });
+    }
+    console.log(result)
+    res.status(200).json({ result: result });
+  })
+});
 // signup
 app.post("/signup", (req: Request, res: Response) => {
   console.log("signupリクエストを受け付けました。");
@@ -253,6 +281,7 @@ app.post("/token", (req: Request, res: Response) => {
   })
 });
 
+// エラー時
 try {
   app.listen(PORT, () => {
     console.log(`server running at://localhost:${PORT}`);
