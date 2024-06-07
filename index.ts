@@ -165,7 +165,7 @@ app.get('/userlist', (req: Request, res: Response) => {
         if (error) {
           res.status(500).json({ message: error.message });
         } else {
-          console.log(relResult)
+          // console.log(relResult)
           res.status(200).json({ usersResult: usersResult, user_id: user_id, relResult: relResult });
         }
       })
