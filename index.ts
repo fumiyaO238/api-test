@@ -27,16 +27,19 @@ app.get('/', (req: Request, res: Response) => {
   const authoHeader = (req.headers.authorization?.split(" "))
   // @ts-ignore
   const successToken = authoHeader[1];
-  console.log(successToken)
 
-  console.log("getリクエストを受け付けました。");
-  const sql = "SELECT * FROM  blog";
-  connection.query(sql, (error, result) => {
+  console.log("blog-listリクエストを受け付けました。");
+
+  // blog取得 -------------------
+  const sqlGetBlog = `SELECT T1.id,T1.name,T2.content,T2.created_at,T2.id AS content_id FROM users AS T1 INNER JOIN blog AS T2 ON T1.id = T2.user_id`;
+
+  connection.query(sqlGetBlog, (error, result) => {
     if (error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(200).json({ blogs: result });
+      console.log(error);
+      return res.status(500).json({ message: "Failed to registrate user" });
     }
+    console.log(result)
+      res.status(200).json({ result: result });
   })
 });
 // postリクエスト
@@ -92,36 +95,37 @@ app.get('/my-blogs', (req: Request, res: Response) => {
   const authoHeader = (req.headers.authorization?.split(" "))
   // @ts-ignore
   const successToken = authoHeader[1];
-  console.log(successToken)
 
   // ここにトークンからユーザIDを取得する処理
   const sqlToken = `SELECT user_id FROM code WHERE token="${successToken}"`;
-
   connection.query(sqlToken, (error, results) => {
     if (error) {
       console.log(error);
       return res.status(500).json({ message: "Failed to registrate user" });
     }
-
     // @ts-ignore
     if (results.length === 0) {
       return res.status(500).json({ message: "※ログイン失敗\nログインに失敗しました。\n再度お試しください。" });
     }
     // @ts-ignore
     const user_id = results[0].user_id;
-    console.log(user_id)
 
     // blog取得 -------------------
-    const sqlToken = `SELECT * FROM blog WHERE user_id ="${user_id}"`;
+    const sqlGetBlog = `SELECT * FROM blog WHERE user_id ="${user_id}"`;
+    const sqlGetUser = `SELECT * FROM users WHERE id ="${user_id}"`;
 
-    connection.query(sqlToken, (error, result) => {
+    connection.query(sqlGetBlog, (error, blogResult) => {
       if (error) {
         console.log(error);
         return res.status(500).json({ message: "Failed to registrate user" });
       }
-      console.log(`${user_id}さんのブログ取得`)
-      // console.log(result)
-      res.status(200).json({ result: result });
+      connection.query(sqlGetUser, (error, userResult) => {
+        if (error) {
+          console.log(error);
+          return res.status(500).json({ message: "Failed to registrate user" });
+        }
+        res.status(200).json({ blogResult: blogResult, userResult: userResult });
+      })
     })
   })
 })
@@ -193,7 +197,6 @@ app.post("/login", (req: Request, res: Response) => {
     })
   })
 });
-// logout
 
 // tokenCheck
 app.post("/token", (req: Request, res: Response) => {
