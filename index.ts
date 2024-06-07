@@ -39,7 +39,7 @@ app.get('/', (req: Request, res: Response) => {
       return res.status(500).json({ message: "Failed to registrate user" });
     }
     console.log(result)
-      res.status(200).json({ result: result });
+    res.status(200).json({ result: result });
   })
 });
 // postリクエスト
@@ -133,16 +133,36 @@ app.get('/my-blogs', (req: Request, res: Response) => {
 /* users */
 // getリクエスト
 app.get('/userlist', (req: Request, res: Response) => {
+
   console.log("userListリクエストを受け付けました。");
-  const sql = "SELECT * FROM  users";
-  connection.query(sql, (error, result) => {
+  const authoHeader = (req.headers.authorization?.split(" "))
+  // @ts-ignore
+  const successToken = authoHeader[1];
+
+  // ここにトークンからユーザIDを取得する処理
+  const sqlToken = `SELECT user_id FROM code WHERE token="${successToken}"`;
+  connection.query(sqlToken, (error, results) => {
     if (error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(200).json({ blogs: result });
+      console.log(error);
+      return res.status(500).json({ message: "Failed to registrate user" });
     }
-  })
-});
+    // @ts-ignore
+    if (results.length === 0) {
+      return res.status(500).json({ message: "※ログイン失敗\nログインに失敗しました。\n再度お試しください。" });
+    }
+    // @ts-ignore
+    const user_id = results[0].user_id;
+
+    const sql = "SELECT * FROM  users";
+    connection.query(sql, (error, result) => {
+      if (error) {
+        res.status(500).json({ message: error.message });
+      } else {
+        res.status(200).json({ users: result, user_id: user_id });
+      }
+    })
+  });
+})
 // signup
 app.post("/signup", (req: Request, res: Response) => {
   console.log("signupリクエストを受け付けました。");
