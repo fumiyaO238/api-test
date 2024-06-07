@@ -179,16 +179,38 @@ app.post("/user-follow", (req: Request, res: Response) => {
   const insertTime = GetDateTime();
   const myUserId = req.body.myUserId;
   const followedId = req.body.followedId;
-  
-  const sql = `INSERT INTO relationships (follower_id, following_id, created_at) VALUES ("${myUserId}", "${followedId}", "${insertTime}")`;
 
-  connection.query(sql, (error, result) => {
+  // 既ににフォロー済みかチェック→フォローしていたらフォロー解除する（削除）
+  const chekcSql = `SELECT * FROM relationships WHERE follower_id = "${myUserId}" AND following_id = "${followedId}"`
+  connection.query(chekcSql, (error, result) => {
     if (error) {
       console.log(error);
       return res.status(500).json({ message: "Failed to add blog" });
     }
-    console.log(result)
-    res.status(200).json({ result: result });
+    // @ts-ignore
+    if (result.length !== 0) {
+      // フォロー解除
+      const deleteSql = `DELETE FROM relationships WHERE follower_id = "${myUserId}" AND following_id = "${followedId}"`
+      connection.query(deleteSql, (error, deleteResult) => {
+        if (error) {
+          console.log(error);
+          return res.status(500).json({ message: "Failed to add blog" });
+        }
+        console.log("フォロー解除しました。")
+        return res.status(200).json({ result: deleteResult });
+      })
+    } else {
+      const sql = `INSERT INTO relationships (follower_id, following_id, created_at) VALUES ("${myUserId}", "${followedId}", "${insertTime}")`;
+
+      connection.query(sql, (error, addResult) => {
+        if (error) {
+          console.log(error);
+          return res.status(500).json({ message: "Failed to add blog" });
+        }
+        console.log("フォロー追加しました。")
+        res.status(200).json({ result: addResult });
+      })
+    }
   })
 });
 // signup
