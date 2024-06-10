@@ -24,21 +24,35 @@ app.use(express.urlencoded({ extended: true }));
 /* blog */
 // getリクエスト
 app.get('/', (req: Request, res: Response) => {
+  console.log("blog-listリクエストを受け付けました。");
   const authoHeader = (req.headers.authorization?.split(" "))
   // @ts-ignore
   const successToken = authoHeader[1];
 
-  console.log("blog-listリクエストを受け付けました。");
-
-  // blog取得 -------------------
-  const sqlGetBlog = `SELECT T1.id,T1.name,T2.content,T2.created_at,T2.id AS content_id FROM users AS T1 INNER JOIN blog AS T2 ON T1.id = T2.user_id`;
-
-  connection.query(sqlGetBlog, (error, result) => {
+  // ここにトークンからユーザIDを取得する処理
+  const sqlToken = `SELECT user_id FROM code WHERE token="${successToken}"`;
+  connection.query(sqlToken, (error, results) => {
     if (error) {
       console.log(error);
       return res.status(500).json({ message: "Failed to registrate user" });
     }
-    res.status(200).json({ result: result });
+    // @ts-ignore
+    if (results.length === 0) {
+      return res.status(500).json({ message: "※ログイン失敗\nログインに失敗しました。\n再度お試しください。" });
+    }
+    // @ts-ignore
+    const user_id = results[0].user_id;
+
+    // blog取得 -------------------
+    const sqlGetBlog = `SELECT T1.id,T1.name,T2.content,T2.created_at,T2.id AS content_id FROM users AS T1 INNER JOIN blog AS T2 ON T1.id = T2.user_id`;
+
+    connection.query(sqlGetBlog, (error, result) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Failed to registrate user" });
+      }
+      res.status(200).json({ result: result, userId: user_id });
+    })
   })
 });
 // postリクエスト
@@ -152,7 +166,6 @@ app.get('/another_blogs', (req: Request, res: Response) => {
   })
 })
 
-
 /* users */
 // getリクエスト(全ユーザ)
 app.get('/userlist', (req: Request, res: Response) => {
@@ -194,7 +207,7 @@ app.get('/userlist', (req: Request, res: Response) => {
     })
   });
 })
-// postcリクエスト(follow)
+// postリクエスト(follow)
 app.post("/user-follow", (req: Request, res: Response) => {
   console.log("followリクエストを受け付けました。");
   const insertTime = GetDateTime();
