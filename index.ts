@@ -160,7 +160,7 @@ app.get('/userlist', (req: Request, res: Response) => {
       }
 
       // relationships取得
-      const sqlGetRelationships = `SELECT * FROM relationships WHERE follower_id = "${user_id}"`
+      const sqlGetRelationships = `select u.id, u.name, u.created_at, u.updated_at, r.follower_id, r.following_id from users as u left join relationships as r on u.id = r.follower_id where r.follower_id = "${user_id}"`;
       connection.query(sqlGetRelationships, (error, relResult) => {
         if (error) {
           res.status(500).json({ message: error.message });
@@ -197,7 +197,16 @@ app.post("/user-follow", (req: Request, res: Response) => {
           return res.status(500).json({ message: "Failed to add blog" });
         }
         console.log("フォロー解除しました。")
-        return res.status(200).json({ result: deleteResult });
+        // relationships取得
+        const sqlGetRelationships = `select u.id, u.name, u.created_at, u.updated_at, r.follower_id, r.following_id from users as u left join relationships as r on u.id = r.follower_id where r.follower_id = "${myUserId}"`;
+        connection.query(sqlGetRelationships, (error, relResult) => {
+          if (error) {
+            res.status(500).json({ message: error.message });
+          } else {
+            // console.log(relResult)
+            res.status(200).json({ relResult: relResult });
+          }
+        })
       })
     } else {
       const sql = `INSERT INTO relationships (follower_id, following_id, created_at) VALUES ("${myUserId}", "${followedId}", "${insertTime}")`;
@@ -208,7 +217,16 @@ app.post("/user-follow", (req: Request, res: Response) => {
           return res.status(500).json({ message: "Failed to add blog" });
         }
         console.log("フォロー追加しました。")
-        res.status(200).json({ result: addResult });
+        // relationships取得
+        const sqlGetRelationships = `select u.id, u.name, u.created_at, u.updated_at, r.follower_id, r.following_id from users as u left join relationships as r on u.id = r.follower_id where r.follower_id = "${myUserId}"`;
+        connection.query(sqlGetRelationships, (error, relResult) => {
+          if (error) {
+            res.status(500).json({ message: error.message });
+          } else {
+            // console.log(relResult)
+            res.status(200).json({ relResult: relResult });
+          }
+        })
       })
     }
   })
