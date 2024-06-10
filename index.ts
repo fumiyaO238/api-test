@@ -38,14 +38,12 @@ app.get('/', (req: Request, res: Response) => {
       console.log(error);
       return res.status(500).json({ message: "Failed to registrate user" });
     }
-    console.log(result)
     res.status(200).json({ result: result });
   })
 });
 // postリクエスト
 app.post("/add", (req: Request, res: Response) => {
   console.log("postリクエストを受け付けました。");
-  // console.log(req.body.data)
   const insertTime = GetDateTime();
   const { blog } = req.body.data;
   const id = "id1"
@@ -62,7 +60,6 @@ app.post("/add", (req: Request, res: Response) => {
 // deleteリクエスト
 app.delete("/delete", (req: Request, res: Response) => {
   console.log("deleteリクエストを受け付けました。");
-  console.log(req.body.id);
   const id = req.body.id;
   const sql = `DELETE FROM blog WHERE id="${id}"`;
   connection.query(sql, (error) => {
@@ -76,7 +73,6 @@ app.delete("/delete", (req: Request, res: Response) => {
 // putリクエスト
 app.put("/update", (req: Request, res: Response) => {
   console.log("putリクエストを受け付けました。");
-  console.log(req.body.data);
   const { id, todo } = req.body.data;
   const sql = `UPDATE todo SET todo="${todo} WHERE id="${id}"`;
   connection.query(sql, (error) => {
@@ -89,7 +85,7 @@ app.put("/update", (req: Request, res: Response) => {
 })
 
 /* myblog */
-// getリクエスト
+// getリクエスト(自分)
 app.get('/my-blogs', (req: Request, res: Response) => {
   console.log("my-blogsのgetリクエストを受け付けました。");
   const authoHeader = (req.headers.authorization?.split(" "))
@@ -129,9 +125,36 @@ app.get('/my-blogs', (req: Request, res: Response) => {
     })
   })
 })
+// getリクエスト(他ユーザ)
+app.get('/another_blogs', (req: Request, res: Response) => {
+  console.log("another_blogsのgetリクエストを受け付けました。");
+  const authoHeader = (req.headers.authorization?.split(" "))
+  // @ts-ignore
+  const userId = authoHeader[1];
+  console.log(userId)
+
+  // blog取得 -------------------
+  const sqlGetBlog = `SELECT * FROM blog WHERE user_id ="${userId}"`;
+  const sqlGetUser = `SELECT * FROM users WHERE id ="${userId}"`;
+
+  connection.query(sqlGetBlog, (error, blogResult) => {
+    if (error) {
+      console.log(error);
+      return res.status(500).json({ message: "Failed to registrate user" });
+    }
+    connection.query(sqlGetUser, (error, userResult) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Failed to registrate user" });
+      }
+      res.status(200).json({ blogResult: blogResult, userResult: userResult });
+    })
+  })
+})
+
 
 /* users */
-// getリクエスト
+// getリクエスト(全ユーザ)
 app.get('/userlist', (req: Request, res: Response) => {
 
   console.log("userListリクエストを受け付けました。");
@@ -165,17 +188,15 @@ app.get('/userlist', (req: Request, res: Response) => {
         if (error) {
           res.status(500).json({ message: error.message });
         } else {
-          // console.log(relResult)
           res.status(200).json({ usersResult: usersResult, user_id: user_id, relResult: relResult });
         }
       })
     })
   });
 })
-// postリクエスト(follow)
+// postcリクエスト(follow)
 app.post("/user-follow", (req: Request, res: Response) => {
   console.log("followリクエストを受け付けました。");
-  // console.log(req.body.data)
   const insertTime = GetDateTime();
   const myUserId = req.body.myUserId;
   const followedId = req.body.followedId;
@@ -203,7 +224,6 @@ app.post("/user-follow", (req: Request, res: Response) => {
           if (error) {
             res.status(500).json({ message: error.message });
           } else {
-            // console.log(relResult)
             res.status(200).json({ relResult: relResult });
           }
         })
@@ -223,7 +243,6 @@ app.post("/user-follow", (req: Request, res: Response) => {
           if (error) {
             res.status(500).json({ message: error.message });
           } else {
-            // console.log(relResult)
             res.status(200).json({ relResult: relResult });
           }
         })
@@ -247,7 +266,6 @@ app.post("/signup", (req: Request, res: Response) => {
       console.log(error);
       return res.status(500).json({ message: "※登録失敗\nユーザーの登録に失敗しました。\n入力されたメールアドレスは既に使用されています。\n別のメールアドレスをご使用ください。" });
     }
-    console.log(result)
     res.status(200).json({ id: id });
   })
 });
@@ -305,7 +323,6 @@ app.post("/token", (req: Request, res: Response) => {
     }
     // @ts-ignore
     const user_id = results[0].user_id;
-    console.log(user_id)
 
     // user取得 -------------------
     const sqlToken = `SELECT * FROM users WHERE id ="${user_id}"`;
@@ -315,7 +332,6 @@ app.post("/token", (req: Request, res: Response) => {
         console.log(error);
         return res.status(500).json({ message: "Failed to registrate user" });
       }
-      console.log(results)
       res.status(200).json({ result: results, passedToken: successToken });
     })
   })
