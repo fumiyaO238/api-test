@@ -118,11 +118,13 @@ app.get('/my-blogs', (req: Request, res: Response) => {
       return res.status(500).json({ message: "※ログイン失敗\nログインに失敗しました。\n再度お試しください。" });
     }
     // @ts-ignore
-    const user_id = results[0].user_id;
+    const userId = results[0].user_id;
 
     // blog取得 -------------------
-    const sqlGetBlog = `SELECT * FROM blog WHERE user_id ="${user_id}"`;
-    const sqlGetUser = `SELECT * FROM users WHERE id ="${user_id}"`;
+    const sqlGetBlog = `SELECT * FROM blog WHERE user_id ="${userId}"`;
+    const sqlGetUser = `SELECT * FROM users WHERE id ="${userId}"`;
+    const sqlGetFollowerRelationships = `select u.id, u.name, r.follower_id, r.following_id from users as u left join relationships as r on u.id = r.follower_id where following_id = "${userId}";`;
+    const sqlGetFollowingRelationships = `select u.id, u.name, r.follower_id, r.following_id from users as u left join relationships as r on u.id = r.following_id where follower_id = "${userId}";`;
 
     connection.query(sqlGetBlog, (error, blogResult) => {
       if (error) {
@@ -133,8 +135,21 @@ app.get('/my-blogs', (req: Request, res: Response) => {
         if (error) {
           console.log(error);
           return res.status(500).json({ message: "Failed to registrate user" });
-        }
-        res.status(200).json({ blogResult: blogResult, userResult: userResult });
+        };
+        connection.query(sqlGetFollowerRelationships, (error, relFollowerResult) => {
+          if (error) {
+            console.log(error);
+            return res.status(500).json({ message: "Failed to registrate user" });
+          };
+          connection.query(sqlGetFollowingRelationships, (error, relFollowingResult) => {
+            if (error) {
+              console.log(error);
+              return res.status(500).json({ message: "Failed to registrate user" });
+            };
+            console.log(blogResult)
+            res.status(200).json({ blogResult: blogResult, userResult: userResult, relFollowerResult: relFollowerResult, relFollowingResult: relFollowingResult });
+          })
+        })
       })
     })
   })
