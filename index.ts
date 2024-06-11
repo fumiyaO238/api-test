@@ -57,18 +57,19 @@ app.get('/', (req: Request, res: Response) => {
 });
 // postリクエスト
 app.post("/add", (req: Request, res: Response) => {
-  console.log("postリクエストを受け付けました。");
+  console.log("add a blogリクエストを受け付けました。");
   const insertTime = GetDateTime();
-  const { blog } = req.body.data;
-  const id = "id1"
-  const sql = `INSERT INTO blog (content, user_id, created_at) VALUES ("${blog}", "${id}", "${insertTime}")`;
+  const userId = req.body.userId;
+  const content = req.body.content;
+  const sql = `INSERT INTO blog (content, user_id, created_at) VALUES ("${content}", "${userId}", "${insertTime}")`;
 
   connection.query(sql, (error, result) => {
     if (error) {
       console.log(error);
       return res.status(500).json({ message: "Failed to add blog" });
     }
-    res.status(200).json({ blogs: result });
+    console.log(result)
+    res.status(200).json({ newBlog: result });
   })
 });
 // deleteリクエスト
@@ -187,7 +188,6 @@ app.get('/another_blogs', (req: Request, res: Response) => {
             console.log(error);
             return res.status(500).json({ message: "Failed to registrate user" });
           };
-          console.log(blogResult)
           res.status(200).json({ blogResult: blogResult, userResult: userResult, relFollowerResult: relFollowerResult, relFollowingResult: relFollowingResult });
         })
       })
