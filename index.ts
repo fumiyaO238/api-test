@@ -142,14 +142,15 @@ app.get('/my-blogs', (req: Request, res: Response) => {
 // getリクエスト(他ユーザ)
 app.get('/another_blogs', (req: Request, res: Response) => {
   console.log("another_blogsのgetリクエストを受け付けました。");
-  const authoHeader = (req.headers.authorization?.split(" "))
+  const authoHeader = (req.headers.authorization?.split(" "));
   // @ts-ignore
   const userId = authoHeader[1];
-  console.log(userId)
 
   // blog取得 -------------------
   const sqlGetBlog = `SELECT * FROM blog WHERE user_id ="${userId}"`;
   const sqlGetUser = `SELECT * FROM users WHERE id ="${userId}"`;
+  const sqlGetFollowerRelationships = `select u.id, u.name, r.follower_id, r.following_id from users as u left join relationships as r on u.id = r.follower_id where following_id = "${userId}";`;
+  const sqlGetFollowingRelationships = `select u.id, u.name, r.follower_id, r.following_id from users as u left join relationships as r on u.id = r.following_id where follower_id = "${userId}";`;
 
   connection.query(sqlGetBlog, (error, blogResult) => {
     if (error) {
@@ -160,8 +161,21 @@ app.get('/another_blogs', (req: Request, res: Response) => {
       if (error) {
         console.log(error);
         return res.status(500).json({ message: "Failed to registrate user" });
-      }
-      res.status(200).json({ blogResult: blogResult, userResult: userResult });
+      };
+      connection.query(sqlGetFollowerRelationships, (error, relFollowerResult) => {
+        if (error) {
+          console.log(error);
+          return res.status(500).json({ message: "Failed to registrate user" });
+        };
+        connection.query(sqlGetFollowingRelationships, (error, relFollowingResult) => {
+          if (error) {
+            console.log(error);
+            return res.status(500).json({ message: "Failed to registrate user" });
+          };
+          console.log(blogResult)
+          res.status(200).json({ blogResult: blogResult, userResult: userResult, relFollowerResult: relFollowerResult, relFollowingResult: relFollowingResult });
+        })
+      })
     })
   })
 })
